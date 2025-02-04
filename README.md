@@ -1,4 +1,9 @@
 # PumpFun Comment Bot 🤖
+
+_THIS IS OUTDATED, [JOIN OUR DISCORD](https://discord.gg/42CmvN6z) TO GET LATEST COMMENT BOT<br>_
+
+_DEMO VIDEO: https://streamable.com/5p6zsq_<br>
+
 The PumpFun Comment Bot is designed to automate and enhance your engagement with Pump.Fun tokens. Whether you need to comment with text, images, or both, this bot leverages proxy servers to avoid bans and maintain consistent activity. Here’s a detailed overview of its features and usage.
 
 **Features** <br>
