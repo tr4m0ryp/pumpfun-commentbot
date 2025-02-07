@@ -1,6 +1,6 @@
 import axios from "axios";
+import { getRandomComment } from "./commentsList.js";
 
-// Function to extract specific cookies from a cookie string
 function extractCookies(cookieString, names) {
   const cookies = {};
   cookieString.split(';').forEach(cookie => {
@@ -12,9 +12,11 @@ function extractCookies(cookieString, names) {
   return cookies;
 }
 
-const sendPostRequest = async (text, mint, token, auth, additionalCookies) => {
-  const cookieString = `auth_token=${auth}`;
-  for (const [name, value] of Object.entries(additionalCookies)) {
+const sendPostRequest = async (mint, token, auth, additionalCookies = {}) => {
+  const commentText = getRandomComment();
+
+  let cookieString = `auth_token=${auth}`;
+  for (const [name, value] of Object.entries(additionalCookies || {})) {
     cookieString += `; ${name}=${value}`;
   }
 
@@ -36,7 +38,7 @@ const sendPostRequest = async (text, mint, token, auth, additionalCookies) => {
   };
 
   const data = {
-    text: text,
+    text: commentText, 
     mint: mint,
     token: token
   };
