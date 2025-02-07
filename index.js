@@ -57,7 +57,7 @@ async function autoComment(botProfiles) {
         const selectedBots = botProfiles.sort(() => 0.5 - Math.random()).slice(0, COMMENTS_PER_COIN);
 
         for (const bot of selectedBots) {
-            import getRandomComment from "./commentsList.js";
+            const getRandomComment = require("./commentsList.js");
             const commentText = getRandomComment(); // Random comment
             await sendPostRequest(commentText, mint.address, "token-placeholder", bot.authToken, {});
         }
