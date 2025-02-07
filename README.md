@@ -11,7 +11,7 @@ The PumpFun Comment Bot is designed to automate and enhance your engagement with
 Post comments on Pump.Fun tokens using text.
 
 🖼️ Comment with Text and Image <br>
-Combine text and images in your comments for a richer engagement.
+Combine text and images in your comments for a richer engagement.s
 
 🕰️ Idle Mode <br>
 Automatically comment on King of the Hill (KOTH) tokens using text or images, ensuring continuous presence.
