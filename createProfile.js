@@ -1,10 +1,11 @@
 import fetch from "node-fetch";
 import chalk from "chalk";
 import { faker } from '@faker-js/faker';
+import { getRandomBio } from "./bioList.js";
 
 async function createProfile(accessToken) {
     const username = genUsername();
-    const bio = genBio();
+    const bio = getRandomBio(); // Nu uit een aparte lijst
 
     const url = "https://frontend-api.pump.fun/users";
 
@@ -16,7 +17,7 @@ async function createProfile(accessToken) {
     const headers = {
         "Cookie": `auth_token=${accessToken}`,
         "Content-Type": "application/json"
-    }
+    };
 
     const req = await fetch(url, {
         method: "POST",
@@ -41,17 +42,6 @@ function genUsername() {
         username = faker.internet.userName().replace(/[^a-zA-Z0-9_]/g, '_');
     }
     return username;
-}
-
-function genBio() {
-    let bioList = [
-        'bio1',
-        'bio2',
-        'bio3'
-    ];
-
-    let randomChoice = Math.floor(Math.random() * bioList.length);
-    return bioList[randomChoice];
 }
 
 export default createProfile;
