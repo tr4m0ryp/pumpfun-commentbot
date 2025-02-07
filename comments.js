@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getRandomComment } from "./commentsList.js";
+const { getRandomComment } = await import("./commentsList.js");
 
 function extractCookies(cookieString, names) {
   const cookies = {};
