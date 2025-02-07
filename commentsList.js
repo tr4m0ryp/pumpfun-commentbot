@@ -3,6 +3,8 @@ const comments = [
     "test"
 ];
 
-export function getRandomComment() {
+function getRandomComment() {
     return comments[Math.floor(Math.random() * comments.length)];
 }
+
+export default getRandomComment;
