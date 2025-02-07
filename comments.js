@@ -1,5 +1,24 @@
 import axios from "axios";
-import getRandomComment from "./commentsList.js";
+async function loadCommentsList() {
+    let getRandomComment;
+
+    if (typeof require !== "undefined") {
+        // Als require() werkt, gebruik CommonJS
+        getRandomComment = require("./commentsList.js");
+    } else {
+        // Gebruik dynamische import voor ES Modules
+        const module = await import("./commentsList.js");
+        getRandomComment = module.default || module.getRandomComment;
+    }
+
+    return getRandomComment;
+}
+
+// Test of de functie werkt
+loadCommentsList().then(getRandomComment => {
+    console.log(getRandomComment());  // Test output
+});
+
 
 function extractCookies(cookieString, names) {
   const cookies = {};
