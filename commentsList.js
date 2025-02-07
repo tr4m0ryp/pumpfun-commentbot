@@ -7,4 +7,4 @@ function getRandomComment() {
     return comments[Math.floor(Math.random() * comments.length)];
 }
 
-export default getRandomComment;
+module.exports = getRandomComment;
