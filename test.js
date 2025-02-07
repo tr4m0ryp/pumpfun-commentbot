@@ -1,85 +1,138 @@
 import fetch from "node-fetch";
-import { faker } from "@faker-js/faker";
 import chalk from "chalk";
+import { faker } from '@faker-js/faker';
+import { ethers } from "ethers";
+import { getRandomBio } from "./bioList.js"; // Zorg dat deze module een functie exporteert die een willekeurige bio teruggeeft
 
-// Herbruikbare API-configuratie
-const API_BASE_URL = "https://pump-fun-backend.fly.dev";
-
-// Stap 1: Vraag een nonce op
-async function getNonce(address) {
-  const response = await fetch(`${API_BASE_URL}/user/nonce`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ address }),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to get nonce: ${response.status}`);
+/**
+ * Genereert een geldige gebruikersnaam (max 10 tekens, alleen letters, cijfers en underscores).
+ */
+function genUsername() {
+  let username = '';
+  while (username.length === 0 || username.length > 10 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+    username = faker.internet.userName().replace(/[^a-zA-Z0-9_]/g, '_');
   }
-  const { nonce } = await response.json();
-  return nonce;
+  return username;
 }
 
-// Stap 2: Onderteken de nonce (dummy implementatie)
-function signNonce(nonce, privateKey) {
-  // Gebruik ethers.js of een vergelijkbare library voor echte ondertekening
-  // Voorbeeld: ethers.utils.signMessage(nonce, privateKey);
-  return `signed_${nonce}_with_${privateKey}`;
-}
+/**
+ * Voert de wallet-authenticatie uit:
+ * 1. Haalt een nonce op voor het wallet-adres.
+ * 2. Ondertekent de nonce automatisch met de private key.
+ * 3. Verifieert de handtekening bij de Pump.fun backend.
+ *
+ * @returns {Promise<string|null>} Het access token (auth_token) als string, of null bij een fout.
+ */
+async function authenticateWallet() {
+  // Haal walletgegevens op (bij voorkeur uit environment variables)
+  const walletAddress = process.env.WALLET_ADDRESS || '0xYOUR_WALLET_ADDRESS';
+  const walletPrivateKey = process.env.WALLET_PRIVATE_KEY || '0xYOUR_PRIVATE_KEY';
 
-// Stap 3: Verifieer de handtekening
-async function verifySignature(address, signature) {
-  const response = await fetch(`${API_BASE_URL}/user/verify`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ address, signature }),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to verify signature: ${response.status}`);
-  }
-  const { accessToken } = await response.json();
-  return accessToken;
-}
+  // Endpoint voor het opvragen van een nonce
+  const nonceUrl = "https://frontend-api.pump.fun/user/nonce";
 
-// Stap 4: Maak een gebruiker aan
-async function createUser(accessToken, username, bio) {
-  const response = await fetch(`${API_BASE_URL}/user`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ username, bio }),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to create user: ${error.message}`);
-  }
-  return await response.json();
-}
-
-// Functie om alles te combineren
-async function main(walletAddress, privateKey) {
   try {
-    console.log(chalk.blue("Requesting nonce..."));
-    const nonce = await getNonce(walletAddress);
+    console.log(chalk.blue("Stap 1: Ophalen van de nonce..."));
+    const nonceResponse = await fetch(nonceUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ address: walletAddress })
+    });
+    const nonceData = await nonceResponse.json();
+    if (!nonceResponse.ok) {
+      throw new Error("Fout bij het ophalen van de nonce: " + JSON.stringify(nonceData));
+    }
+    const nonce = nonceData.nonce;
+    console.log(chalk.blue(`Nonce ontvangen: ${nonce}`));
 
-    console.log(chalk.blue("Signing nonce..."));
-    const signature = signNonce(nonce, privateKey);
+    // Automatisch ondertekenen van de nonce
+    console.log(chalk.blue("Stap 2: Ondertekenen van de nonce..."));
+    const wallet = new ethers.Wallet(walletPrivateKey);
+    const signature = await wallet.signMessage(nonce);
+    console.log(chalk.blue(`Handtekening gegenereerd: ${signature}`));
 
-    console.log(chalk.blue("Verifying signature..."));
-    const accessToken = await verifySignature(walletAddress, signature);
+    // Verificatie van de handtekening
+    const verifyUrl = "https://frontend-api.pump.fun/user/verify";
+    console.log(chalk.blue("Stap 3: Verifiëren van de handtekening..."));
+    const verifyResponse = await fetch(verifyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ address: walletAddress, signature: signature })
+    });
+    const verifyData = await verifyResponse.json();
+    if (!verifyResponse.ok) {
+      throw new Error("Fout bij het verifiëren van de handtekening: " + JSON.stringify(verifyData));
+    }
+    // Verwacht dat de API een access token teruggeeft (bijvoorbeeld in verifyData.accessToken)
+    const accessToken = verifyData.accessToken;
+    console.log(chalk.green(`Verificatie geslaagd. Access token ontvangen: ${accessToken}`));
 
-    console.log(chalk.blue("Creating user..."));
-    const username = faker.internet.userName();
-    const bio = faker.lorem.sentence();
-    const user = await createUser(accessToken, username, bio);
-
-    console.log(chalk.greenBright("User created successfully!"));
-    console.log(user);
+    return accessToken;
   } catch (error) {
-    console.error(chalk.redBright("Error:", error.message));
+    console.error(chalk.red("Authenticatie mislukt:"), error);
+    return null;
   }
 }
 
-// Voer de flow uit
-main("jouw_wallet_adres", "jouw_private_key");
+/**
+ * Maakt een gebruikersprofiel aan via de Pump.fun API.
+ *
+ * @param {string} accessToken - Het access token (auth_token) dat wordt gebruikt voor de authenticatie (via cookie).
+ * @returns {Promise<boolean>} True als het profiel succesvol is aangemaakt, anders false.
+ */
+async function createProfile(accessToken) {
+  const username = genUsername();
+  const bio = getRandomBio();
+
+  const url = "https://frontend-api.pump.fun/users";
+
+  const payload = {
+    bio: bio,
+    username: username,
+  };
+
+  const headers = {
+    // Het accessToken wordt hier als cookie meegegeven
+    "Cookie": `auth_token=${accessToken}`,
+    "Content-Type": "application/json"
+  };
+
+  console.log(chalk.blue("Stap 4: Aanmaken van het profiel..."));
+  const req = await fetch(url, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(payload)
+  });
+
+  const res = await req.json();
+
+  if (!req.ok) {
+    console.error(chalk.redBright("Profiel aanmaken mislukt:"), JSON.stringify(res, null, 2));
+    return false;
+  }
+
+  console.log(chalk.greenBright(`Profiel succesvol aangemaakt!
+Username: ${res.username}
+Bio: ${res.bio}`));
+  return true;
+}
+
+/**
+ * Orkestreert de volledige workflow:
+ * 1. Wallet authenticatie
+ * 2. Profiel aanmaken
+ */
+async function main() {
+  const accessToken = await authenticateWallet();
+  if (!accessToken) {
+    console.error(chalk.red("Authenticatie mislukt. Profiel aanmaken wordt afgebroken."));
+    return;
+  }
+  await createProfile(accessToken);
+}
+
+main();
