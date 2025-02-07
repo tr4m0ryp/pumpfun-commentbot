@@ -14,7 +14,7 @@ const bios = [
         "Data-driven crypto strategies for serious traders. Join: {{link}}",
         "AI-powered trading insights for top-tier results. Join now: {{link}}",
         "Next-level crypto gains with AI precision. Get in here: {{link}}",
-        "{{link}} - Your competitive edge in crypto trading – AI-powered!",
+        "{{link}} - Your competitive edge in crypto trading - AI-powered!",
         "AI does the work, you take the profit. Join us: {{link}}",
         "Be early to the AI-driven revolution in crypto trading. Join: {{link}}",
         "AI-backed trading strategies that deliver. Get started: {{link}}",
