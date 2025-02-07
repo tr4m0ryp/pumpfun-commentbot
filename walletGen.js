@@ -4,25 +4,52 @@ import fs from 'fs/promises';
 import path from 'path';
 
 async function genWallet(amount) {
-    const walletsFilePath = path.join(process.cwd(), 'walletsList.json');
-    const wallets = [];
+    try {
+        if (!Number.isInteger(amount) || amount <= 0) {
+            throw new Error("Invalid amount: must be a positive integer.");
+        }
 
-    for (let i = 0; i < amount; i++) {
-        const keyPair = Keypair.generate();
+        const walletsFilePath = path.join(process.cwd(), 'walletsList.json');
+        let existingWallets = [];
 
-        const walletData = {
-            [`Wallet ${i + 1}`]: {
-                address: keyPair.publicKey.toString(),
-                privateKey: bs58.encode(keyPair.secretKey)
+        // Controleer of walletsList.json al bestaat en wallets bevat
+        try {
+            const fileData = await fs.readFile(walletsFilePath, 'utf-8');
+            if (fileData.trim()) {
+                existingWallets = JSON.parse(fileData);
+                if (!Array.isArray(existingWallets)) {
+                    throw new Error("Invalid walletsList.json format. Expected an array.");
+                }
             }
-        };
+        } catch (error) {
+            console.warn("No existing wallets found, creating a new file...");
+        }
 
-        wallets.push(walletData);
-        console.log(`Wallet ${i + 1} generated.`);
+        const newWallets = [];
+
+        for (let i = 0; i < amount; i++) {
+            const keyPair = Keypair.generate();
+
+            const walletData = {
+                [`Wallet ${existingWallets.length + i + 1}`]: {
+                    address: keyPair.publicKey.toString(),
+                    privateKey: bs58.encode(keyPair.secretKey)
+                }
+            };
+
+            newWallets.push(walletData);
+            console.log(`Wallet ${existingWallets.length + i + 1} generated.`);
+        }
+
+        // Voeg nieuwe wallets toe aan de bestaande wallets
+        const updatedWallets = [...existingWallets, ...newWallets];
+
+        await fs.writeFile(walletsFilePath, JSON.stringify(updatedWallets, null, 2));
+        console.log(`Successfully generated ${amount} new wallets.\n\n`);
+    } catch (error) {
+        console.error("Error generating wallets:", error.message);
     }
-
-    await fs.writeFile(walletsFilePath, JSON.stringify(wallets, null, 2));
-    console.log('All wallets generated successfully.\n\n');
 }
 
 export default genWallet;
+
