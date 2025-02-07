@@ -36,7 +36,7 @@ async function setupBots() {
 
   const botProfiles = [];
   for (let i = 0; i < NUMBER_OF_BOTS; i++) {
-    const profile = await createProfile(wallets[i].privKey);
+    const profile = await createProfile(wallets[i].privKey, wallets[i].pubKey);
     if (profile) {
       botProfiles.push({
         username: profile.username,
