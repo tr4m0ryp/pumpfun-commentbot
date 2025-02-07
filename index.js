@@ -57,8 +57,9 @@ async function autoComment(botProfiles) {
         const selectedBots = botProfiles.sort(() => 0.5 - Math.random()).slice(0, COMMENTS_PER_COIN);
 
         for (const bot of selectedBots) {
-            const commentText = "🚀 This coin is going to the moon!"; // Random comment
-            await sendPostRequest(commentText, mint, "token-placeholder", bot.authToken, {});
+            import { getRandomComment } from "./commentsList.js";
+            const commentText = getRandomComment(); // Random comment
+            await sendPostRequest(commentText, mint.address, "token-placeholder", bot.authToken, {});
         }
     }
 }
