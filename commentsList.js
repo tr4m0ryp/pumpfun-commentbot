@@ -1,5 +1,5 @@
 const comments = [
-    `Don't miss out! Join our AI-powered crypto revolution now!`,
+    "Don't miss out! Join our AI-powered crypto revolution now!",
     "test"
 ];
 
