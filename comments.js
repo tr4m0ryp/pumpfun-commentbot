@@ -1,29 +1,10 @@
 import axios from "axios";
-async function loadCommentsList() {
-    let getRandomComment;
-
-    if (typeof require !== "undefined") {
-        // Als require() werkt, gebruik CommonJS
-        getRandomComment = require("./commentsList.js");
-    } else {
-        // Gebruik dynamische import voor ES Modules
-        const module = await import("./commentsList.js");
-        getRandomComment = module.default || module.getRandomComment;
-    }
-
-    return getRandomComment;
-}
-
-// Test of de functie werkt
-loadCommentsList().then(getRandomComment => {
-    console.log(getRandomComment());  // Test output
-});
-
+import getRandomComment from "./commentsList.js";
 
 function extractCookies(cookieString, names) {
   const cookies = {};
-  cookieString.split(';').forEach(cookie => {
-    const [name, value] = cookie.split('=').map(c => c.trim());
+  cookieString.split(";").forEach(cookie => {
+    const [name, value] = cookie.split("=").map(c => c.trim());
     if (names.includes(name)) {
       cookies[name] = value;
     }
@@ -32,10 +13,11 @@ function extractCookies(cookieString, names) {
 }
 
 const sendPostRequest = async (mint, token, auth, additionalCookies = {}) => {
+  // Get a random comment using the imported function
   const commentText = getRandomComment();
 
   let cookieString = `auth_token=${auth}`;
-  for (const [name, value] of Object.entries(additionalCookies || {})) {
+  for (const [name, value] of Object.entries(additionalCookies)) {
     cookieString += `; ${name}=${value}`;
   }
 
@@ -47,9 +29,9 @@ const sendPostRequest = async (mint, token, auth, additionalCookies = {}) => {
     "Cookie": cookieString,
     "Origin": "https://pump.fun",
     "Referer": "https://pump.fun/",
-    "Sec-Ch-Ua": "\"Microsoft Edge\";v=\"125\", \"Chromium\";v=\"125\", \"Not.A/Brand\";v=\"24\"",
+    "Sec-Ch-Ua": `"Microsoft Edge";v="125", "Chromium";v="125", "Not.A/Brand";v="24"`,
     "Sec-Ch-Ua-Mobile": "?0",
-    "Sec-Ch-Ua-Platform": "\"Windows\"",
+    "Sec-Ch-Ua-Platform": `"Windows"`,
     "Sec-Fetch-Dest": "empty",
     "Sec-Fetch-Mode": "cors",
     "Sec-Fetch-Site": "same-site",
@@ -57,7 +39,7 @@ const sendPostRequest = async (mint, token, auth, additionalCookies = {}) => {
   };
 
   const data = {
-    text: commentText, 
+    text: commentText,
     mint: mint,
     token: token
   };
