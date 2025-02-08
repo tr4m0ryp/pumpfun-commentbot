@@ -13,7 +13,7 @@ The **PumpFun Comment Bot** is an automated script designed to monitor newly min
 
 ## How It Works
 1. **Fetching new minted coins**:
-   - The script queries the Pump.fun API (`https://frontend-api.pump.fun/latest-mints`) to get a list of newly minted coins.
+   - The script queries the Pump.fun API to get new mint coins
 2. **Generating wallets**:
    - Fake Solana wallets are generated using `Keypair.generate()`.
    - The wallets are stored in `walletsList.json` for later use.
